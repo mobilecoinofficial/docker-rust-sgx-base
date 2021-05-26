@@ -1,4 +1,4 @@
-FROM ubuntu:bionic-20210416
+FROM ubuntu:bionic-20210512
 
 RUN  apt-get update \
   && apt-get upgrade -y \
@@ -15,6 +15,7 @@ RUN  apt-get update \
      clang \
      libclang-dev \
      libssl1.1 \
+     libssl-dev \
   && apt-get clean \
   && rm -r /var/lib/apt/lists
 
