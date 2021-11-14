@@ -1,6 +1,7 @@
-FROM ubuntu:bionic-20210512
+FROM ubuntu:focal-20211006
 
-RUN  apt-get update \
+RUN  ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime\
+  && apt-get update \
   && apt-get upgrade -y \
   && apt-get install -y \
      git \
@@ -20,12 +21,13 @@ RUN  apt-get update \
   && rm -r /var/lib/apt/lists
 
 SHELL ["/bin/bash", "-c"]
+# Install SGX
 
-# Install SGX sgx_linux_x64_sdk_2.9.101.2.bin
-RUN curl -O https://download.01.org/intel-sgx/sgx-linux/2.9.1/distro/ubuntu18.04-server/sgx_linux_x64_sdk_2.9.101.2.bin \
-  && chmod +x ./sgx_linux_x64_sdk_2.9.101.2.bin \
-  && ./sgx_linux_x64_sdk_2.9.101.2.bin --prefix=/opt/intel \
-  && rm ./sgx_linux_x64_sdk_2.9.101.2.bin \
+ARG SGX_URL=https://download.01.org/intel-sgx/sgx-linux/2.13.3/distro/ubuntu20.04-server/sgx_linux_x64_sdk_2.13.103.1.bin
+RUN curl -o sgx.bin "${SGX_URL}" \
+  && chmod +x ./sgx.bin \
+  && ./sgx.bin --prefix=/opt/intel \
+  && rm ./sgx.bin \
   && echo '. /opt/intel/sgxsdk/environment' >> /root/.bashrc
 
 # Install rustup
@@ -38,3 +40,4 @@ ENV LD_LIBRARY_PATH=/opt/intel/sgxsdk/sdk_libs
 
 # Add additonal toolchains
 RUN rustup toolchain install nightly-2021-03-25
+RUN rustup toolchain install nightly-2021-07-21
