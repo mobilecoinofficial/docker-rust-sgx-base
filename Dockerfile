@@ -4,19 +4,20 @@ RUN  ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime\
   && apt-get update \
   && apt-get upgrade -y \
   && apt-get install -y \
-     git \
-     curl \
-     jq \
      build-essential \
-     cmake \
-     protobuf-compiler \
-     libprotobuf-dev \
-     llvm \
-     llvm-dev \
      clang \
+     cmake \
+     curl \
+     git \
+     jq \
      libclang-dev \
+     libprotobuf-dev \
      libssl1.1 \
      libssl-dev \
+     llvm \
+     llvm-dev \
+     pkg-config \
+     protobuf-compiler \
   && apt-get clean \
   && rm -r /var/lib/apt/lists
 
