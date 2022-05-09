@@ -1,4 +1,5 @@
-FROM ubuntu:focal-20220113
+# Copyright (c) 2022 MobileCoin Inc.
+FROM ubuntu:focal-20220426
 
 # Utilities:
 # build-essential, cmake, curl, git, jq
@@ -55,3 +56,4 @@ RUN  mkdir -p ${RUSTUP_HOME} \
 # Install rustup
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain nightly-2021-07-21
 RUN rustup toolchain install nightly-2022-01-10
+RUN rustup toolchain install nightly-2022-04-29

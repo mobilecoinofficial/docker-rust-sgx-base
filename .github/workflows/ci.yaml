@@ -1,71 +1,50 @@
+# Copyright (c) 2022 MobileCoin Inc.
 name: ci
 
 env:
-  DOCKERHUB_REPO: mobilecoin/rust-sgx-base
+  DOCKER_REPO: mobilecoin/rust-sgx-base
 
 on:
   push:
-    branches:
-    - 'main'
     tags:
-    - 'v*'
-  # note: this only runs on in-repo PR not a PR from a fork.
-  pull_request:
-    branches:
-    - 'main'
+    - 'v*.*.*'
 
 jobs:
   docker:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, small]
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
-    # Generates tags https://github.com/crazy-max/ghaction-docker-meta
     - name: Docker meta
       id: meta
-      uses: crazy-max/ghaction-docker-meta@v2
+      uses: docker/metadata-action@v3
       with:
-        images: ${{ env.DOCKERHUB_REPO }}
+        flavor: |
+          latest=true
+        images: ${{ env.DOCKER_REPO }}
         tags: |
           type=ref,event=branch
-          type=ref,event=pr
-          type=semver,pattern={{version}}
-          type=semver,pattern={{major}}.{{minor}}
+          type=semver,pattern=v{{version}}
+          type=semver,pattern=v{{major}}.{{minor}}
+          type=semver,pattern=v{{major}}
           type=sha
 
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
-
-    - name: Cache Docker layers
-      uses: actions/cache@v2
-      with:
-        path: /tmp/.buildx-cache
-        key: ${{ runner.os }}-buildx-${{ github.sha }}
-        restore-keys: |
-          ${{ runner.os }}-buildx-
+      uses: docker/setup-buildx-action@v2
 
     - name: Login to DockerHub
-      uses: docker/login-action@v1 
+      uses: docker/login-action@v2
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Build and push
-      id: docker_build
-      uses: docker/build-push-action@v2
+      uses: docker/build-push-action@v3
       with:
+        cache-from: type=registry,ref=${{ env.DOCKER_REPO }}:buildcache
+        cache-to: type=registry,ref=${{ env.DOCKER_REPO }}:buildcache
         context: .
+        labels: ${{ steps.meta.outputs.labels }}
         push: true
         tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=local,src=/tmp/.buildx-cache
-        cache-to: type=local,dest=/tmp/.buildx-cache-new
-
-    # Temp fix to keep cache under control
-    # https://github.com/docker/build-push-action/issues/252
-    # https://github.com/moby/buildkit/issues/1896
-    - name: Move cache
-      run: |
-        rm -rf /tmp/.buildx-cache
-        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
