@@ -36,7 +36,7 @@ RUN  ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime\
 SHELL ["/bin/bash", "-c"]
 # Install SGX
 
-ARG SGX_URL=https://download.01.org/intel-sgx/sgx-linux/2.16/distro/ubuntu${VERSION_ID}-server/sgx_linux_x64_sdk_2.16.100.4.bin
+ARG SGX_URL=https://download.01.org/intel-sgx/sgx-linux/2.16/distro/ubuntu20.04-server/sgx_linux_x64_sdk_2.16.100.4.bin
 RUN  curl -o sgx.bin "${SGX_URL}" \
   && chmod +x ./sgx.bin \
   && ./sgx.bin --prefix=/opt/intel \
