@@ -73,7 +73,6 @@ RUN apt-get update \
   && rm -r /var/lib/apt/lists
 
 # Setup postgresql for local testing
-# TODO: Remove when we migrate off of CircleCI
 RUN sed -i \
   -e 's|host    all             all             127.0.0.1/32            md5|host    all             all             127.0.0.1/32            trust|'\
   -e 's|host    all             all             ::1/128                 md5|host    all             all             ::1/128                 trust|' \
