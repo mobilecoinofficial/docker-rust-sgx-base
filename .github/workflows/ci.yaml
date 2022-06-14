@@ -39,9 +39,21 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Build and push
+    - name: Build and push rust-sgx-base
       uses: docker/build-push-action@v3
       with:
+        target: rust-sgx-base
+        cache-from: type=registry,ref=${{ env.DOCKER_REPO }}:buildcache
+        cache-to: type=registry,ref=${{ env.DOCKER_REPO }}:buildcache
+        context: .
+        labels: ${{ steps.meta.outputs.labels }}
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+
+    - name: Build and push builder-install
+      uses: docker/build-push-action@v3
+      with:
+        target: builder-install
         cache-from: type=registry,ref=${{ env.DOCKER_REPO }}:buildcache
         cache-to: type=registry,ref=${{ env.DOCKER_REPO }}:buildcache
         context: .
