@@ -1,13 +1,14 @@
 # Copyright (c) 2022 MobileCoin Inc.
 name: ci
 
-env:
-  DOCKER_REPO: mobilecoin/rust-sgx-base
-
 on:
   push:
     tags:
     - 'v*.*.*'
+
+env:
+  BASE_DOCKER_REPO: mobilecoin/rust-sgx-base
+  BUILDER_DOCKER_REPO: mobilecoin/builder-install
 
 jobs:
   docker:
@@ -16,13 +17,25 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    - name: Docker meta
-      id: meta
+    - name: Docker meta for rust-sgx-base
+      id: base_meta
       uses: docker/metadata-action@v3
       with:
-        flavor: |
-          latest=true
-        images: ${{ env.DOCKER_REPO }}
+        flavor: latest=true
+        images: ${{ env.BASE_DOCKER_REPO }}
+        tags: |
+          type=ref,event=branch
+          type=semver,pattern=v{{version}}
+          type=semver,pattern=v{{major}}.{{minor}}
+          type=semver,pattern=v{{major}}
+          type=sha
+
+    - name: Docker meta for builder-install
+      id: builder_meta
+      uses: docker/metadata-action@v3
+      with:
+        flavor: latest=true
+        images: ${{ env.BUILDER_DOCKER_REPO }}
         tags: |
           type=ref,event=branch
           type=semver,pattern=v{{version}}
@@ -42,21 +55,21 @@ jobs:
     - name: Build and push rust-sgx-base
       uses: docker/build-push-action@v3
       with:
-        target: rust-sgx-base
-        cache-from: type=registry,ref=${{ env.DOCKER_REPO }}:buildcache
-        cache-to: type=registry,ref=${{ env.DOCKER_REPO }}:buildcache
         context: .
-        labels: ${{ steps.meta.outputs.labels }}
+        target: rust-sgx-base
+        cache-from: type=registry,ref=${{ env.BASE_DOCKER_REPO }}:buildcache
+        cache-to: type=registry,${{ env.BASE_DOCKER_REPO }}:buildcache
+        labels: ${{ steps.base_meta.outputs.labels }}
+        tags: ${{ steps.base_meta.outputs.tags }}
         push: true
-        tags: ${{ steps.meta.outputs.tags }}
 
     - name: Build and push builder-install
       uses: docker/build-push-action@v3
       with:
-        target: builder-install
-        cache-from: type=registry,ref=${{ env.DOCKER_REPO }}:buildcache
-        cache-to: type=registry,ref=${{ env.DOCKER_REPO }}:buildcache
         context: .
-        labels: ${{ steps.meta.outputs.labels }}
+        target: builder-install
+        cache-from: type=registry,ref=${{ env.BUILDER_DOCKER_REPO }}:buildcache
+        cache-to: type=registry,ref=${{ env.BUILDER_DOCKER_REPO }}:buildcache
+        labels: ${{ steps.builder_meta.outputs.labels }}
+        tags: ${{ steps.builder_meta.outputs.tags }}
         push: true
-        tags: ${{ steps.meta.outputs.tags }}
