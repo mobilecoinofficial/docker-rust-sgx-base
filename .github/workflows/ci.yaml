@@ -2,6 +2,7 @@
 name: ci
 
 on:
+  pull_request:
   push:
     tags:
     - 'v*.*.*'
@@ -9,6 +10,7 @@ on:
 env:
   BASE_DOCKER_REPO: mobilecoin/rust-sgx-base
   BUILDER_DOCKER_REPO: mobilecoin/builder-install
+  PUSH: ${{ github.event_name == 'pull_request' && 'false' || 'true' }}
 
 jobs:
   docker:
@@ -52,7 +54,7 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Build and push rust-sgx-base
+    - name: Build and maybe push rust-sgx-base
       uses: docker/build-push-action@v3
       with:
         context: .
@@ -61,9 +63,9 @@ jobs:
         cache-to: type=registry,ref=${{ env.BASE_DOCKER_REPO }}:buildcache
         labels: ${{ steps.base_meta.outputs.labels }}
         tags: ${{ steps.base_meta.outputs.tags }}
-        push: true
+        push: ${{ env.PUSH }}
 
-    - name: Build and push builder-install
+    - name: Build and maybe push builder-install
       uses: docker/build-push-action@v3
       with:
         context: .
@@ -72,4 +74,10 @@ jobs:
         cache-to: type=registry,ref=${{ env.BUILDER_DOCKER_REPO }}:buildcache
         labels: ${{ steps.builder_meta.outputs.labels }}
         tags: ${{ steps.builder_meta.outputs.tags }}
-        push: true
+        push: ${{ env.PUSH }}
+
+
+# via https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-only-cancel-in-progress-jobs-or-runs-for-the-current-workflow
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
