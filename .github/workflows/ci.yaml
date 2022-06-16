@@ -58,7 +58,7 @@ jobs:
         context: .
         target: rust-sgx-base
         cache-from: type=registry,ref=${{ env.BASE_DOCKER_REPO }}:buildcache
-        cache-to: type=registry,${{ env.BASE_DOCKER_REPO }}:buildcache
+        cache-to: type=registry,ref=${{ env.BASE_DOCKER_REPO }}:buildcache
         labels: ${{ steps.base_meta.outputs.labels }}
         tags: ${{ steps.base_meta.outputs.tags }}
         push: true
