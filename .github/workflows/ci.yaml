@@ -75,3 +75,9 @@ jobs:
         labels: ${{ steps.builder_meta.outputs.labels }}
         tags: ${{ steps.builder_meta.outputs.tags }}
         push: ${{ env.PUSH }}
+
+
+# via https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-only-cancel-in-progress-jobs-or-runs-for-the-current-workflow
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
