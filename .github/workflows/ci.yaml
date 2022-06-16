@@ -2,6 +2,7 @@
 name: ci
 
 on:
+  pull_request:
   push:
     tags:
     - 'v*.*.*'
@@ -9,6 +10,7 @@ on:
 env:
   BASE_DOCKER_REPO: mobilecoin/rust-sgx-base
   BUILDER_DOCKER_REPO: mobilecoin/builder-install
+  PUSH: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
 
 jobs:
   docker:
@@ -61,7 +63,7 @@ jobs:
         cache-to: type=registry,ref=${{ env.BASE_DOCKER_REPO }}:buildcache
         labels: ${{ steps.base_meta.outputs.labels }}
         tags: ${{ steps.base_meta.outputs.tags }}
-        push: true
+        push: ${{ env.PUSH }}
 
     - name: Build and push builder-install
       uses: docker/build-push-action@v3
@@ -72,4 +74,4 @@ jobs:
         cache-to: type=registry,ref=${{ env.BUILDER_DOCKER_REPO }}:buildcache
         labels: ${{ steps.builder_meta.outputs.labels }}
         tags: ${{ steps.builder_meta.outputs.tags }}
-        push: true
+        push: ${{ env.PUSH }}
