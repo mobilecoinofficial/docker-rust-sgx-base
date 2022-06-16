@@ -10,7 +10,7 @@ on:
 env:
   BASE_DOCKER_REPO: mobilecoin/rust-sgx-base
   BUILDER_DOCKER_REPO: mobilecoin/builder-install
-  PUSH: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
+  PUSH: ${{ github.event_name == 'pull_request' && 'false' || 'true' }}
 
 jobs:
   docker:
