@@ -24,6 +24,7 @@ RUN  ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime \
      libclang-dev \
      libprotobuf-dev \
      libpq-dev \
+     libsqlite3-dev \
      libssl1.1 \
      libssl-dev \
      llvm \
