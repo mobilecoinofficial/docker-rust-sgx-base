@@ -54,7 +54,7 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Build and push rust-sgx-base
+    - name: Build and maybe push rust-sgx-base
       uses: docker/build-push-action@v3
       with:
         context: .
@@ -65,7 +65,7 @@ jobs:
         tags: ${{ steps.base_meta.outputs.tags }}
         push: ${{ env.PUSH }}
 
-    - name: Build and push builder-install
+    - name: Build and maybe push builder-install
       uses: docker/build-push-action@v3
       with:
         context: .
