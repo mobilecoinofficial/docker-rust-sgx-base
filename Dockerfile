@@ -2,6 +2,8 @@
 
 FROM ubuntu:focal-20220426 as rust-sgx-base
 
+SHELL ["/bin/bash", "-c"]
+
 # Utilities:
 # build-essential, cmake, curl, git, jq
 #
@@ -35,9 +37,7 @@ RUN  ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime \
   && apt-get clean \
   && rm -r /var/lib/apt/lists
 
-SHELL ["/bin/bash", "-c"]
 # Install SGX
-
 ARG SGX_URL=https://download.01.org/intel-sgx/sgx-linux/2.17/distro/ubuntu20.04-server/sgx_linux_x64_sdk_2.17.100.3.bin
 RUN  curl -o sgx.bin "${SGX_URL}" \
   && chmod +x ./sgx.bin \
@@ -62,6 +62,9 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
 
 # Set up the builder-install image with more test helpers for CI.
 FROM rust-sgx-base AS builder-install
+
+SHELL ["/bin/bash", "-c"]
+
 RUN apt-get update \
   && apt-get install -y \
     nginx \
@@ -73,20 +76,18 @@ RUN apt-get update \
   && rm -r /var/lib/apt/lists
 
 # Setup postgresql for local testing
-RUN sed -i \
-  -e 's|host    all             all             127.0.0.1/32            md5|host    all             all             127.0.0.1/32            trust|'\
-  -e 's|host    all             all             ::1/128                 md5|host    all             all             ::1/128                 trust|' \
-  /etc/postgresql/*/main/pg_hba.conf
-RUN service postgresql start && su postgres -c "createuser --superuser root"
+RUN sed -i -e '/127.0.0.1|::1/ s/md5/trust/g' /etc/postgresql/*/main/pg_hba.conf && \
+  service postgresql start && \
+  su postgres -c "createuser --superuser root"
 
-# Install  Cargo test helpers from released binaries.
+# Install test helpers from released binaries.
 # TODO: Remove cargo2junit and other unused helpers when we migrate off of CircleCI.
-RUN curl -LsSf https://get.nexte.st/latest/linux | tar zxf - -C ${CARGO_HOME:-~/.cargo}/bin && \
-    curl -LsSf https://github.com/mozilla/sccache/releases/download/v0.3.0/sccache-v0.3.0-x86_64-unknown-linux-musl.tar.gz | tar xzf - -C ${CARGO_HOME:-~/.cargo}/bin && \
+RUN curl -LsSf https://get.nexte.st/latest/linux | \
+      tar zxf - -C ${CARGO_HOME:-~/.cargo}/bin && \
+    curl -LsSf https://github.com/mozilla/sccache/releases/download/v0.3.0/sccache-v0.3.0-x86_64-unknown-linux-musl.tar.gz | \
+      tar xzf - -C ${CARGO_HOME:-~/.cargo}/bin && \
+    curl -LsSf https://github.com/ryankurte/cargo-binstall/releases/latest/download/cargo-binstall-x86_64-unknown-linux-musl.tgz | \
+      tar xzf - -C ${CARGO_HOME:-~/.cargo}/bin && \
     curl -LsSf https://github.com/eqrion/cbindgen/releases/download/v0.24.2/cbindgen -o ${CARGO_HOME:-~/.cargo}/bin/cbindgen && \
-    curl -LsSf https://github.com/ryankurte/cargo-binstall/releases/latest/download/cargo-binstall-x86_64-unknown-linux-musl.tgz | tar xzf - -C ${CARGO_HOME:-~/.cargo}/bin && \
+    chmod 0755 ${CARGO_HOME:-~/.cargo}/bin/cbindgen && \
     for crate in cargo-cache cargo-tree cargo2junit; do cargo binstall --no-confirm $crate; done
-
-WORKDIR /
-# Party like it's June 8th, 1989.
-SHELL ["/bin/bash", "-c"]
