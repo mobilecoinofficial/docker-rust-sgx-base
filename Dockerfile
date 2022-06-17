@@ -79,12 +79,16 @@ RUN sed -i \
   /etc/postgresql/*/main/pg_hba.conf
 RUN service postgresql start && su postgres -c "createuser --superuser root"
 
-# Install  Cargo test helpers from released binaries.
+# Install test helpers from released binaries.
 # TODO: Remove cargo2junit and other unused helpers when we migrate off of CircleCI.
-RUN curl -LsSf https://get.nexte.st/latest/linux | tar zxf - -C ${CARGO_HOME:-~/.cargo}/bin && \
-    curl -LsSf https://github.com/mozilla/sccache/releases/download/v0.3.0/sccache-v0.3.0-x86_64-unknown-linux-musl.tar.gz | tar xzf - -C ${CARGO_HOME:-~/.cargo}/bin && \
+RUN curl -LsSf https://get.nexte.st/latest/linux | \
+      tar zxf - -C ${CARGO_HOME:-~/.cargo}/bin && \
+    curl -LsSf https://github.com/mozilla/sccache/releases/download/v0.3.0/sccache-v0.3.0-x86_64-unknown-linux-musl.tar.gz | \
+      tar xzf - -C ${CARGO_HOME:-~/.cargo}/bin && \
+    curl -LsSf https://github.com/ryankurte/cargo-binstall/releases/latest/download/cargo-binstall-x86_64-unknown-linux-musl.tgz | \
+      tar xzf - -C ${CARGO_HOME:-~/.cargo}/bin && \
     curl -LsSf https://github.com/eqrion/cbindgen/releases/download/v0.24.2/cbindgen -o ${CARGO_HOME:-~/.cargo}/bin/cbindgen && \
-    curl -LsSf https://github.com/ryankurte/cargo-binstall/releases/latest/download/cargo-binstall-x86_64-unknown-linux-musl.tgz | tar xzf - -C ${CARGO_HOME:-~/.cargo}/bin && \
+    chmod 0755 ${CARGO_HOME:-~/.cargo}/bin/cbindgen && \
     for crate in cargo-cache cargo-tree cargo2junit; do cargo binstall --no-confirm $crate; done
 
 WORKDIR /
