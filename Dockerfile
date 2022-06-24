@@ -76,7 +76,7 @@ RUN apt-get update \
   && rm -r /var/lib/apt/lists
 
 # Setup postgresql for local testing
-RUN sed -i -e '/127.0.0.1|::1/ s/md5/trust/g' /etc/postgresql/*/main/pg_hba.conf && \
+RUN sed -Ei -e '/127.0.0.1|::1/ s/md5/trust/g' /etc/postgresql/*/main/pg_hba.conf && \
   service postgresql start && \
   su postgres -c "createuser --superuser root"
 
