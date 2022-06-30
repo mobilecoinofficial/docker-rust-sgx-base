@@ -65,9 +65,12 @@ FROM rust-sgx-base AS builder-install
 
 SHELL ["/bin/bash", "-c"]
 
-RUN apt-get update \
+# Add sources for nodejs and install it and other helpers from apt.
+RUN curl -LsSf https://deb.nodesource.com/setup_18.x | bash -s \
+  && apt-get update \
   && apt-get install -y \
     nginx \
+    nodejs \
     postgresql \
     postgresql-client \
     python3 \
