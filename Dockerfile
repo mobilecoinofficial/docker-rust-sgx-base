@@ -75,6 +75,7 @@ RUN curl -LsSf https://deb.nodesource.com/setup_18.x | bash -s \
     postgresql-client \
     python3 \
     python3-pip \
+    psmisc \
   && apt-get clean \
   && rm -r /var/lib/apt/lists
 
