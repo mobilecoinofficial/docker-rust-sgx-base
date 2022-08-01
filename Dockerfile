@@ -65,6 +65,15 @@ FROM rust-sgx-base AS builder-install
 
 SHELL ["/bin/bash", "-c"]
 
+# Install go 1.16 release
+RUN GO_PKG=go1.16.4.linux-amd64.tar.gz \
+  && wget https://golang.org/dl/$GO_PKG -O go.tgz \
+  && tar -C /usr/local -xzf go.tgz \
+  && rm -rf go.tgz
+
+ENV GOPATH=/opt/go/
+ENV PATH="/usr/local/go/bin:$GOPATH/bin:$PATH"
+
 # Add sources for nodejs and install it and other helpers from apt.
 RUN curl -LsSf https://deb.nodesource.com/setup_18.x | bash -s \
   && apt-get update \

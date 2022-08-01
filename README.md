@@ -7,6 +7,22 @@ We recommend referencing the image by the hash instead of a tag to verify a cons
 
 # Build
 
+The following command will build and tag `rust-sgx-base:latest`. (But not push it to dockerhub, the tag will be local to your machine.)
+
 ```
 docker build -t mobilecoin/rust-sgx-base .
+```
+
+This variation will build and tag `builder-install:latest`.
+
+```
+docker build -t mobilecoin/builder-install .
+```
+
+To help iterate on a `builder-install` image, you can test it by opening a prompt
+using the `mob prompt` tool in `mobilecoin.git`. Then you can try to build rust
+code, or go code, or really whatever your heart desires.
+
+```
+./mob prompt --tag latest --no-pull
 ```
