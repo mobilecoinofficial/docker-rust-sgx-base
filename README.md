@@ -20,8 +20,8 @@ docker build -t mobilecoin/builder-install .
 ```
 
 To help iterate on a `builder-install` image, you can test it by opening a prompt
-using the `mob prompt` tool in `mobilecoin.git`. Then you can try to build rust
-code, or go code, or really whatever your heart desires.
+using the [`mob prompt` tool in `mobilecoin`](https://github.com/mobilecoinfoundation/mobilecoin/blob/master/mob).
+Then you can try to build rust code, or go code, or really whatever your heart desires.
 
 ```
 ./mob prompt --tag latest --no-pull
