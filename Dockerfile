@@ -65,8 +65,8 @@ FROM rust-sgx-base AS builder-install
 
 SHELL ["/bin/bash", "-c"]
 
-# Install go 1.16 release
-RUN GO_PKG=go1.16.4.linux-amd64.tar.gz \
+# Install go 1.18 release
+RUN GO_PKG=go1.18.5.linux-amd64.tar.gz \
   && wget https://golang.org/dl/$GO_PKG -O go.tgz \
   && tar -C /usr/local -xzf go.tgz \
   && rm -rf go.tgz
