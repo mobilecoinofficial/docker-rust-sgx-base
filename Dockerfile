@@ -73,6 +73,7 @@ RUN GO_PKG=go1.18.5.linux-amd64.tar.gz \
 
 ENV GOPATH=/opt/go/
 ENV PATH="/usr/local/go/bin:$GOPATH/bin:$PATH"
+RUN mkdir -p "${GOPATH}"
 
 # Add sources for nodejs and install it and other helpers from apt.
 RUN curl -LsSf https://deb.nodesource.com/setup_18.x | bash -s \
@@ -85,6 +86,7 @@ RUN curl -LsSf https://deb.nodesource.com/setup_18.x | bash -s \
     python3 \
     python3-pip \
     psmisc \
+    sudo \
   && apt-get clean \
   && rm -r /var/lib/apt/lists
 
@@ -95,9 +97,13 @@ RUN sed -Ei -e '/127.0.0.1|::1/ s/md5/trust/g' /etc/postgresql/*/main/pg_hba.con
 
 # Install test helpers from released binaries.
 RUN curl -LsSf https://get.nexte.st/latest/linux \
-    | tar zxf - -C ${CARGO_HOME:-~/.cargo}/bin \
+    | tar zxf - -C ${CARGO_HOME}/bin \
   && curl -LsSf https://github.com/eqrion/cbindgen/releases/download/v0.24.2/cbindgen \
-    -o ${CARGO_HOME:-~/.cargo}/bin/cbindgen \
+    -o ${CARGO_HOME}/bin/cbindgen \
   && curl -LsSf https://github.com/mozilla/sccache/releases/download/v0.3.0/sccache-v0.3.0-x86_64-unknown-linux-musl.tar.gz \
-    | tar xzf - -C ${CARGO_HOME:-~/.cargo}/bin --strip-components=1 sccache-v0.3.0-x86_64-unknown-linux-musl/sccache \
-  && chmod 0755 ${CARGO_HOME:-~/.cargo}/bin/{cbindgen,sccache}
+    | tar xzf - -C ${CARGO_HOME}/bin --strip-components=1 sccache-v0.3.0-x86_64-unknown-linux-musl/sccache \
+  && chmod 0755 ${CARGO_HOME}/bin/{cbindgen,sccache}
+
+COPY entrypoint-builder-install.sh /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
