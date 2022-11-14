@@ -58,16 +58,18 @@ then
         -s "/bin/bash" \
         "${EXTERNAL_USER}"
 
-    echo_err "-- Set up .mob directory for cargo and build caching"
-    mkdir -p .mob
     # Copy CARGO_HOME if it doesn't exist in the working dir
-    if [[ ! -d ".mob/cargo" ]]
+    if [[ -d "/tmp/mobilenode" ]]
     then
-        cp -r "${CARGO_HOME}" .mob/cargo
+        echo_err "-- Set up .mob directory for cargo and build caching"
+        mkdir -p /tmp/mobilenode/.mob
+        if [[ ! -d "/tmp/mobilenode/.mob/cargo" ]]
+        then
+            cp -r "${CARGO_HOME}" /tmp/mobilenode/.mob/cargo
+        fi
+        CARGO_HOME=/tmp/mobilenode/.mob/cargo
+        export CARGO_HOME
     fi
-
-    CARGO_HOME=$(pwd)/.mob/cargo
-    export CARGO_HOME
 
     echo_err "-- Setup user .bashrc"
     root_env=$(env)
