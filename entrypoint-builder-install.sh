@@ -5,8 +5,6 @@
 
 set -e
 
-echo "Executing $0"
-
 is_set()
 {
     var_name="${1}"
@@ -17,34 +15,63 @@ is_set()
     fi
 }
 
+# Echo to stderr - print details when verbose is set.
+echo_err()
+{
+    if [ -n "${ENTRYPOINT_VERBOSE}" ]
+    then
+        printf "%s\n" "$*" >&2
+    fi
+}
+
+echo_err "Executing $0 with command $*"
+
 if [[ -n "${EXTERNAL_UID}" ]]
 then
-    echo "Found User ID ${EXTERNAL_UID}, setting up and switching to that user."
+    echo_err "-- Found User ID ${EXTERNAL_UID}, setting up and switching to that user."
 
     is_set EXTERNAL_USER
     is_set EXTERNAL_GID
     is_set EXTERNAL_GROUP
 
-    # Add group
-    groupadd -g "${EXTERNAL_GID}" "${EXTERNAL_GROUP}"
+    # check for existing group and prefix with 'ext-' if it already exists.
+    if getent group "${EXTERNAL_GROUP}"
+    then
+        EXTERNAL_GROUP="ext-${EXTERNAL_GROUP}"
+        echo_err "-- Duplicate group name found, now using: ${EXTERNAL_GROUP}"
+    fi
 
-    # create the user
+    echo_err "-- Create group: ${EXTERNAL_GID} ${EXTERNAL_GROUP}"
+    groupadd -o -g "${EXTERNAL_GID}" "${EXTERNAL_GROUP}"
+
+    # check for existing user name and prefix with 'ext-' if it already exists.
+    if getent passwd "${EXTERNAL_USER}"
+    then
+        EXTERNAL_USER="ext-${EXTERNAL_USER}"
+        echo_err "-- Duplicate user name found, now using: ${EXTERNAL_USER}"
+    fi
+
+    echo_err "-- Create user: ${EXTERNAL_UID} ${EXTERNAL_USER} "
     useradd -m -o \
         -u "${EXTERNAL_UID}" \
         -g "${EXTERNAL_GID}" \
         -s "/bin/bash" \
         "${EXTERNAL_USER}"
 
-    mkdir -p .mob
     # Copy CARGO_HOME if it doesn't exist in the working dir
-    if [[ ! -d ".mob/cargo" ]]
+    if [[ -d "/tmp/mobilenode" ]]
     then
-        cp -r "${CARGO_HOME}" .mob/cargo
+        echo_err "-- Set up .mob directory for cargo and build caching"
+        mkdir -p /tmp/mobilenode/.mob
+        if [[ ! -d "/tmp/mobilenode/.mob/cargo" ]]
+        then
+            cp -r "${CARGO_HOME}" /tmp/mobilenode/.mob/cargo
+        fi
+        CARGO_HOME=/tmp/mobilenode/.mob/cargo
+        export CARGO_HOME
     fi
 
-    CARGO_HOME=$(pwd)/.mob/cargo
-
-    # Set up user .bashrc
+    echo_err "-- Setup user .bashrc"
     root_env=$(env)
     env_skips=("HOSTNAME" "PWD" "HOME" "LS_COLORS" "LESSCLOSE" "LESSOPEN" "SHLVL" "_")
 
@@ -66,16 +93,26 @@ then
         echo "export ${p[0]}=${p[1]}" >> "/home/${EXTERNAL_USER}/.bashrc"
     done
 
-    # set up no password sudo access
+    echo_err "-- Setup no password sudo access."
     echo "${EXTERNAL_USER} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/user
     chmod 440 /etc/sudoers.d/user
 
-    # set permissions for build tools.
+    echo_err "-- Set permissions for build tools."
     chown -R "${EXTERNAL_USER}:${EXTERNAL_GROUP}" ".mob"
     chown -R "${EXTERNAL_USER}:${EXTERNAL_GROUP}" "${GOPATH}"
 
-    # now change to external user
-    sudo -u "${EXTERNAL_USER}" -H /bin/bash -c "cd /tmp/mobilenode; exec $*"
+    # switch to mobilenode (mobilecoin repo directory) if its mounted.
+    if [[ -d "/tmp/mobilenode" ]]
+    then
+        echo_err "-- Using /tmp/mobilenode as base directory"
+        cmd="cd /tmp/mobilenode; exec $*"
+    else
+        echo_err "-- Using user home as base directory"
+        cmd="cd /home/${EXTERNAL_USER}; exec $*"
+    fi
+
+    echo_err "-- Change to external user"
+    sudo -u "${EXTERNAL_USER}" -H /bin/bash -i -c "${cmd}"
 else
     # or no user provided and we just exec.
     exec "$@"
