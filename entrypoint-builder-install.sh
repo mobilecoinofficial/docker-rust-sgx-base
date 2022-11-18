@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Entrypoint for builder-install/mob prompt container.
-#   Set up user and set permissions
+# Comments marked with (mob) are functionality integrated with the mobilecoinfoundation/mobilecoin "mob" tool.
 
 set -e
 
@@ -26,6 +26,7 @@ echo_err()
 
 echo_err "Executing $0 with command $*"
 
+# (mob) should set EXTERNAL_* by default.
 if [[ -n "${EXTERNAL_UID}" ]]
 then
     echo_err "-- Found User ID ${EXTERNAL_UID}, setting up and switching to that user."
@@ -34,8 +35,11 @@ then
     is_set EXTERNAL_GID
     is_set EXTERNAL_GROUP
 
+    # (mob) uses /tmp/mobilenode to mount the mobilecoin repo. Allow override of repo path.
+    REPO_PATH="${REPO_PATH:-/tmp/mobilenode}"
+
     # check for existing group and prefix with 'ext-' if it already exists.
-    if getent group "${EXTERNAL_GROUP}"
+    if getent group "${EXTERNAL_GROUP}" >/dev/null 2>&1
     then
         EXTERNAL_GROUP="ext-${EXTERNAL_GROUP}"
         echo_err "-- Duplicate group name found, now using: ${EXTERNAL_GROUP}"
@@ -45,7 +49,7 @@ then
     groupadd -o -g "${EXTERNAL_GID}" "${EXTERNAL_GROUP}"
 
     # check for existing user name and prefix with 'ext-' if it already exists.
-    if getent passwd "${EXTERNAL_USER}"
+    if getent passwd "${EXTERNAL_USER}" >/dev/null 2>&1
     then
         EXTERNAL_USER="ext-${EXTERNAL_USER}"
         echo_err "-- Duplicate user name found, now using: ${EXTERNAL_USER}"
@@ -58,17 +62,19 @@ then
         -s "/bin/bash" \
         "${EXTERNAL_USER}"
 
-    # Copy CARGO_HOME if it doesn't exist in the working dir
-    if [[ -d "/tmp/mobilenode" ]]
+    # (mob) Copy CARGO_HOME if it doesn't exist in the working dir
+    if [[ -d "${REPO_PATH}" ]]
     then
         echo_err "-- Set up .mob directory for cargo and build caching"
-        mkdir -p /tmp/mobilenode/.mob
-        if [[ ! -d "/tmp/mobilenode/.mob/cargo" ]]
+        mkdir -p "${REPO_PATH}/.mob"
+        if [[ ! -d "${REPO_PATH}/.mob/cargo" ]]
         then
-            cp -r "${CARGO_HOME}" /tmp/mobilenode/.mob/cargo
+            cp -r "${CARGO_HOME}" "${REPO_PATH}/.mob/cargo"
         fi
-        CARGO_HOME=/tmp/mobilenode/.mob/cargo
+        CARGO_HOME="${REPO_PATH}/.mob/cargo"
         export CARGO_HOME
+
+        chown -R "${EXTERNAL_USER}:${EXTERNAL_GROUP}" "${REPO_PATH}/.mob"
     fi
 
     echo_err "-- Setup user .bashrc"
@@ -98,14 +104,29 @@ then
     chmod 440 /etc/sudoers.d/user
 
     echo_err "-- Set permissions for build tools."
-    chown -R "${EXTERNAL_USER}:${EXTERNAL_GROUP}" ".mob"
     chown -R "${EXTERNAL_USER}:${EXTERNAL_GROUP}" "${GOPATH}"
 
-    # switch to mobilenode (mobilecoin repo directory) if its mounted.
-    if [[ -d "/tmp/mobilenode" ]]
+    # (mob) will mount your .ssh keys into the container at /var/tmp/user/.ssh by default.
+    # We can't directly mount to /home, or useradd won't setup the home directory.
+    # link ssh dir to user home if available
+    if [[ -d "/var/tmp/user/.ssh" ]]
     then
-        echo_err "-- Using /tmp/mobilenode as base directory"
-        cmd="cd /tmp/mobilenode; exec $*"
+        echo_err "-- Link shared .ssh dir in user home"
+        ln -s /var/tmp/user/.ssh "/home/${EXTERNAL_USER}/.ssh"
+    fi
+
+    # (mob) fix permissions on Docker for MacOS magic ssh-agent socket
+    if [[ -S "/run/host-services/ssh-auth.sock" ]]
+    then
+        echo_err "-- Fix permissions on Docker for Mac magic ssh-agent socket"
+        chown "${EXTERNAL_USER}" /run/host-services/ssh-auth.sock
+    fi
+
+    # (mob) switch to mobilenode (mobilecoin repo directory) if its mounted.
+    if [[ -d "${REPO_PATH}" ]]
+    then
+        echo_err "-- Using ${REPO_PATH} as base directory"
+        cmd="cd ${REPO_PATH}; exec $*"
     else
         echo_err "-- Using user home as base directory"
         cmd="cd /home/${EXTERNAL_USER}; exec $*"
