@@ -107,7 +107,7 @@ then
     chown -R "${EXTERNAL_USER}:${EXTERNAL_GROUP}" "${GOPATH}"
 
     # (mob) will mount your .ssh keys into the container at /var/tmp/user/.ssh by default.
-    # We can directly mount to /home or useradd won't setup the home directory.
+    # We can't directly mount to /home, or useradd won't setup the home directory.
     # link ssh dir to user home if available
     if [[ -d "/var/tmp/user/.ssh" ]]
     then
