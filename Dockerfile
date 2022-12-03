@@ -1,6 +1,6 @@
 # Copyright (c) 2022 MobileCoin Inc.
 
-FROM ubuntu:focal-20220426 as rust-sgx-base
+FROM ubuntu:focal-20221019 as rust-sgx-base
 
 SHELL ["/bin/bash", "-c"]
 
@@ -38,7 +38,7 @@ RUN  ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime \
   && rm -r /var/lib/apt/lists
 
 # Install SGX
-ARG SGX_URL=https://download.01.org/intel-sgx/sgx-linux/2.17.1/distro/ubuntu20.04-server/sgx_linux_x64_sdk_2.17.101.1.bin
+ARG SGX_URL=https://download.01.org/intel-sgx/sgx-linux/2.18/distro/ubuntu20.04-server/sgx_linux_x64_sdk_2.18.100.3.bin
 RUN  curl -o sgx.bin "${SGX_URL}" \
   && chmod +x ./sgx.bin \
   && ./sgx.bin --prefix=/opt/intel \
