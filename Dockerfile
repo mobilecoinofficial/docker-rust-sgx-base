@@ -1,5 +1,4 @@
 # Copyright (c) 2022 MobileCoin Inc.
-
 FROM ubuntu:focal-20221019 as rust-sgx-base
 
 SHELL ["/bin/bash", "-c"]

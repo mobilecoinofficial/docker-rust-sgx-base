@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright (c) 2022 MobileCoin Inc.
 
 # Entrypoint for builder-install/mob prompt container.
 # Comments marked with (mob) are functionality integrated with the mobilecoinfoundation/mobilecoin "mob" tool.
