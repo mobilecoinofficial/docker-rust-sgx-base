@@ -1,5 +1,5 @@
 # Copyright (c) 2022 MobileCoin Inc.
-FROM ubuntu:focal-20221019 as rust-sgx-base
+FROM ubuntu:focal-20230126 as rust-sgx-base
 
 SHELL ["/bin/bash", "-c"]
 
@@ -56,8 +56,10 @@ RUN  mkdir -p ${RUSTUP_HOME} \
 
 # Install rustup
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
-  sh -s -- -y --default-toolchain nightly-2022-04-29
+  sh -s -- -y --default-toolchain nightly-2023-01-04
 
+# Install other toolchains
+RUN rustup toolchain install nightly-2022-04-29
 
 # Set up the builder-install image with more test helpers for CI.
 FROM rust-sgx-base AS builder-install
