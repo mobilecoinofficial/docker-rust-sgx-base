@@ -105,7 +105,18 @@ then
     chmod 440 /etc/sudoers.d/user
 
     echo_err "-- Set permissions for build tools."
+    # (mob) fix permissions for gopath
     chown -R "${EXTERNAL_USER}:${EXTERNAL_GROUP}" "${GOPATH}"
+
+    # (mob) fix permissions so rustup can be run by the user
+    chown "${EXTERNAL_USER}:${EXTERNAL_GROUP}" "${RUSTUP_HOME}"
+    chown "${EXTERNAL_USER}:${EXTERNAL_GROUP}" "${RUSTUP_HOME}/settings.toml"
+    chown -R "${EXTERNAL_USER}:${EXTERNAL_GROUP}" "${RUSTUP_HOME}/tmp"
+    chown -R "${EXTERNAL_USER}:${EXTERNAL_GROUP}" "${RUSTUP_HOME}/downloads"
+    chown -R "${EXTERNAL_USER}:${EXTERNAL_GROUP}" "${RUSTUP_HOME}/update-hashes"
+    # just change the directory so we can add new toolchains
+    # recusrsive on this dir takes a looong time.
+    chown "${EXTERNAL_USER}:${EXTERNAL_GROUP}" "${RUSTUP_HOME}/toolchains"
 
     # (mob) will mount your .ssh keys into the container at /var/tmp/user/.ssh by default.
     # We can't directly mount to /home, or useradd won't setup the home directory.
