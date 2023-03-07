@@ -23,10 +23,13 @@ RUN  ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime \
      git \
      jq \
      libclang-dev \
-     libprotobuf-dev \
+     libhidapi-dev \
      libpq-dev \
-     libssl1.1 \
+     libprotobuf-dev \
      libssl-dev \
+     libssl1.1 \
+     libudev-dev \
+     libusb-1.0-0-dev \
      llvm \
      llvm-dev \
      pkg-config \
