@@ -73,7 +73,7 @@ RUN  mkdir -p ${RUSTUP_HOME} \
 
 # Install rustup
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
-  sh -s -- -y --default-toolchain nightly-2023-01-04
+  sh -s -- -y --default-toolchain nightly-2023-01-22
 
 # Set up the builder-install image with more test helpers for CI.
 FROM rust-sgx-base AS builder-install
