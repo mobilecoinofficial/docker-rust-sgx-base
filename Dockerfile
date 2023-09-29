@@ -30,6 +30,7 @@ RUN  ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime \
      libssl-dev \
      libudev-dev \
      libusb-1.0-0-dev \
+     libdbus-1-dev \
      llvm \
      llvm-dev \
      pkg-config \
