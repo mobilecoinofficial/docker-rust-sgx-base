@@ -12,6 +12,10 @@ SHELL ["/bin/bash", "-c"]
 #
 # Needed for GHA cache actions:
 # zstd
+# 
+# Needed for building ledger-mob and full service:
+# libdbus-1-dev
+#
 RUN  ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime \
   && apt-get update \
   && apt-get upgrade -y \
