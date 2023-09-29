@@ -16,26 +16,27 @@ RUN  ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime \
   && apt-get update \
   && apt-get upgrade -y \
   && apt-get install -y \
-     build-essential \
-     clang \
-     cmake \
-     curl \
-     git \
-     jq \
-     libclang-dev \
-     libhidapi-dev \
-     libprotobuf-dev \
-     libpq-dev \
-     libssl1.1 \
-     libssl-dev \
-     libudev-dev \
-     libusb-1.0-0-dev \
-     llvm \
-     llvm-dev \
-     pkg-config \
-     protobuf-compiler \
-     wget \
-     zstd \
+  build-essential \
+  clang \
+  cmake \
+  curl \
+  git \
+  jq \
+  libclang-dev \
+  libdbus-1-dev \
+  libhidapi-dev \
+  libprotobuf-dev \
+  libpq-dev \
+  libssl1.1 \
+  libssl-dev \
+  libudev-dev \
+  libusb-1.0-0-dev \
+  llvm \
+  llvm-dev \
+  pkg-config \
+  protobuf-compiler \
+  wget \
+  zstd \
   && apt-get clean \
   && rm -r /var/lib/apt/lists
 
@@ -53,10 +54,10 @@ RUN mkdir -p /etc/apt/keyrings \
   && echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/intel-sgx.gpg] https://download.01.org/intel-sgx/sgx_repo/ubuntu focal main" | tee /etc/apt/sources.list.d/intel-sgx.list \
   && apt-get update \
   && apt-get install -y \
-     libsgx-dcap-ql=${DCAP_VERSION} \
-     libsgx-dcap-ql-dev=${DCAP_VERSION} \
-     libsgx-dcap-quote-verify=${DCAP_VERSION} \
-     libsgx-dcap-quote-verify-dev=${DCAP_VERSION} \
+  libsgx-dcap-ql=${DCAP_VERSION} \
+  libsgx-dcap-ql-dev=${DCAP_VERSION} \
+  libsgx-dcap-quote-verify=${DCAP_VERSION} \
+  libsgx-dcap-quote-verify-dev=${DCAP_VERSION} \
   && apt-get clean \
   && rm -r /var/lib/apt/lists
 
@@ -94,14 +95,14 @@ RUN mkdir -p "${GOPATH}"
 RUN curl -LsSf https://deb.nodesource.com/setup_18.x | bash -s \
   && apt-get update \
   && apt-get install -y \
-    nginx \
-    nodejs \
-    postgresql \
-    postgresql-client \
-    python3 \
-    python3-pip \
-    psmisc \
-    sudo \
+  nginx \
+  nodejs \
+  postgresql \
+  postgresql-client \
+  python3 \
+  python3-pip \
+  psmisc \
+  sudo \
   && apt-get clean \
   && rm -r /var/lib/apt/lists
 
@@ -112,11 +113,11 @@ RUN sed -Ei -e '/127.0.0.1|::1/ s/md5/trust/g' /etc/postgresql/*/main/pg_hba.con
 
 # Install test helpers from released binaries.
 RUN curl -LsSf https://get.nexte.st/latest/linux \
-    | tar zxf - -C ${CARGO_HOME}/bin \
+  | tar zxf - -C ${CARGO_HOME}/bin \
   && curl -LsSf https://github.com/eqrion/cbindgen/releases/download/v0.24.2/cbindgen \
-    -o ${CARGO_HOME}/bin/cbindgen \
+  -o ${CARGO_HOME}/bin/cbindgen \
   && curl -LsSf https://github.com/mozilla/sccache/releases/download/v0.3.0/sccache-v0.3.0-x86_64-unknown-linux-musl.tar.gz \
-    | tar xzf - -C ${CARGO_HOME}/bin --strip-components=1 sccache-v0.3.0-x86_64-unknown-linux-musl/sccache \
+  | tar xzf - -C ${CARGO_HOME}/bin --strip-components=1 sccache-v0.3.0-x86_64-unknown-linux-musl/sccache \
   && chmod 0755 ${CARGO_HOME}/bin/{cbindgen,sccache}
 
 COPY entrypoint-builder-install.sh /usr/local/bin/entrypoint.sh
