@@ -45,6 +45,9 @@ RUN  ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime \
   && rm -r /var/lib/apt/lists
 
 # Install SGX
+COPY support/intel-sgx-archive-keyring.gpg /etc/apt/trusted.gpg.d/
+RUN  echo "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/intel-sgx-archive-keyring.gpg] https://download.01.org/intel-sgx/sgx_repo/ubuntu/ focal main" > /etc/apt/sources.list.d/intel-sgx.list
+
 ARG SGX_URL=https://download.01.org/intel-sgx/sgx-linux/2.19/distro/ubuntu20.04-server/sgx_linux_x64_sdk_2.19.100.3.bin
 RUN  curl -o sgx.bin "${SGX_URL}" \
   && chmod +x ./sgx.bin \
@@ -53,17 +56,21 @@ RUN  curl -o sgx.bin "${SGX_URL}" \
 
 # Install DCAP libraries
 ARG DCAP_VERSION=1.16.100.2-focal1
-RUN mkdir -p /etc/apt/keyrings \
-  && wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | gpg --dearmor | tee /etc/apt/keyrings/intel-sgx.gpg > /dev/null \
-  && echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/intel-sgx.gpg] https://download.01.org/intel-sgx/sgx_repo/ubuntu focal main" | tee /etc/apt/sources.list.d/intel-sgx.list \
-  && apt-get update \
+ENV DCAP_VERSION=${DCAP_VERSION}
+RUN  apt-get update \
   && apt-get install -y \
      libsgx-dcap-ql=${DCAP_VERSION} \
      libsgx-dcap-ql-dev=${DCAP_VERSION} \
      libsgx-dcap-quote-verify=${DCAP_VERSION} \
      libsgx-dcap-quote-verify-dev=${DCAP_VERSION} \
+     libsgx-dcap-default-qpl=${DCAP_VERSION} \
   && apt-get clean \
   && rm -r /var/lib/apt/lists
+
+# The config installed with `libsgx-dcap-default-qpl` is for a local PCCS service.
+# We copy the Azure PCCS config after installing `libsgx-dcap-default-qpl` to
+# override this default config.
+COPY support/sgx_default_qcnl_azure.conf /etc/sgx_default_qcnl.conf
 
 ENV SGX_SDK=/opt/intel/sgxsdk
 ENV PATH=/opt/cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/intel/sgxsdk/bin:/opt/intel/sgxsdk/bin/x64
