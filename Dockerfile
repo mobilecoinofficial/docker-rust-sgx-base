@@ -12,7 +12,7 @@ SHELL ["/bin/bash", "-c"]
 #
 # Needed for GHA cache actions:
 # zstd
-# 
+#
 # Needed for building ledger-mob and full service:
 # libdbus-1-dev
 #
@@ -45,16 +45,16 @@ RUN  ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime \
   && rm -r /var/lib/apt/lists
 
 # Install SGX
-ARG SGX_URL=https://download.01.org/intel-sgx/sgx-linux/2.19/distro/ubuntu20.04-server/sgx_linux_x64_sdk_2.19.100.3.bin
+ARG SGX_URL=https://download.01.org/intel-sgx/sgx-linux/2.20/distro/ubuntu20.04-server/sgx_linux_x64_sdk_2.20.100.4.bin
 RUN  curl -o sgx.bin "${SGX_URL}" \
   && chmod +x ./sgx.bin \
   && ./sgx.bin --prefix=/opt/intel \
   && rm ./sgx.bin
 
 # Install DCAP libraries
-ARG DCAP_VERSION=1.16.100.2-focal1
+ARG DCAP_VERSION=1.17.100.4-focal1
 RUN mkdir -p /etc/apt/keyrings \
-  && wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | gpg --dearmor | tee /etc/apt/keyrings/intel-sgx.gpg > /dev/null \
+  && wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | gpg --dearmor -o /etc/apt/keyrings/intel-sgx.gpg \
   && echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/intel-sgx.gpg] https://download.01.org/intel-sgx/sgx_repo/ubuntu focal main" | tee /etc/apt/sources.list.d/intel-sgx.list \
   && apt-get update \
   && apt-get install -y \
@@ -95,8 +95,12 @@ ENV GOPATH=/opt/go/
 ENV PATH="/usr/local/go/bin:$GOPATH/bin:$PATH"
 RUN mkdir -p "${GOPATH}"
 
+ENV NODE_MAJOR=18
+
 # Add sources for nodejs and install it and other helpers from apt.
-RUN curl -LsSf https://deb.nodesource.com/setup_18.x | bash -s \
+RUN mkdir -p /etc/apt/keyrings \
+  && wget -qO - https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
+  && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \
   && apt-get update \
   && apt-get install -y \
     nginx \
