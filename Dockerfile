@@ -45,14 +45,14 @@ RUN  ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime \
   && rm -r /var/lib/apt/lists
 
 # Install SGX
-ARG SGX_URL=https://download.01.org/intel-sgx/sgx-linux/2.20/distro/ubuntu20.04-server/sgx_linux_x64_sdk_2.20.100.4.bin
+ARG SGX_URL=https://download.01.org/intel-sgx/sgx-linux/2.21/distro/ubuntu20.04-server/sgx_linux_x64_sdk_2.21.100.1.bin
 RUN  curl -o sgx.bin "${SGX_URL}" \
   && chmod +x ./sgx.bin \
   && ./sgx.bin --prefix=/opt/intel \
   && rm ./sgx.bin
 
 # Install DCAP libraries
-ARG DCAP_VERSION=1.17.100.4-focal1
+ARG DCAP_VERSION=1.18.100.1-focal1
 RUN mkdir -p /etc/apt/keyrings \
   && wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | gpg --dearmor -o /etc/apt/keyrings/intel-sgx.gpg \
   && echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/intel-sgx.gpg] https://download.01.org/intel-sgx/sgx_repo/ubuntu focal main" | tee /etc/apt/sources.list.d/intel-sgx.list \
