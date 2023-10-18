@@ -95,16 +95,9 @@ ENV GOPATH=/opt/go/
 ENV PATH="/usr/local/go/bin:$GOPATH/bin:$PATH"
 RUN mkdir -p "${GOPATH}"
 
-ENV NODE_MAJOR=18
-
-# Add sources for nodejs and install it and other helpers from apt.
-RUN mkdir -p /etc/apt/keyrings \
-  && wget -qO - https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
-  && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \
-  && apt-get update \
+RUN apt-get update \
   && apt-get install -y \
     nginx \
-    nodejs \
     postgresql \
     postgresql-client \
     python3 \
