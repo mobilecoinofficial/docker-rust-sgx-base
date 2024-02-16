@@ -8,7 +8,7 @@ SHELL ["/bin/bash", "-c"]
 #
 # Build Requirements:
 # libclang-dev, libprotobuf-dev, libpq-dev, libssl1.1,
-# libssl-dev, llvm, llvm-dev, pkg-config, protobuf-compiler
+# libssl-dev, llvm, llvm-dev, pkg-config
 #
 # Needed for GHA cache actions:
 # zstd
@@ -38,11 +38,18 @@ RUN  ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime \
      llvm \
      llvm-dev \
      pkg-config \
-     protobuf-compiler \
+     unzip \
      wget \
      zstd \
   && apt-get clean \
   && rm -r /var/lib/apt/lists
+
+# Install a newer version of the protobuf compiler, that's not available in apt
+RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v25.2/protoc-25.2-linux-x86_64.zip \
+  && unzip protoc-25.2-linux-x86_64.zip -d protoc \
+  && cp protoc/bin/protoc /usr/bin/protoc \
+  && cp -r protoc/include/google /usr/include/google \
+  && rm -rf protoc 
 
 # Install SGX
 ARG SGX_URL=https://download.01.org/intel-sgx/sgx-linux/2.22/distro/ubuntu20.04-server/sgx_linux_x64_sdk_2.22.100.3.bin
