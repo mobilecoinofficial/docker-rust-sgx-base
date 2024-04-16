@@ -49,7 +49,7 @@ RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v25.2/pro
   && unzip protoc-25.2-linux-x86_64.zip -d protoc \
   && cp protoc/bin/protoc /usr/bin/protoc \
   && cp -r protoc/include/google /usr/include/google \
-  && rm -rf protoc 
+  && rm -rf protoc
 
 # Install SGX
 ARG SGX_URL=https://download.01.org/intel-sgx/sgx-linux/2.23/distro/ubuntu20.04-server/sgx_linux_x64_sdk_2.23.100.2.bin
@@ -85,7 +85,7 @@ RUN  mkdir -p ${RUSTUP_HOME} \
 
 # Install rustup
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
-  sh -s -- -y --default-toolchain nightly-2023-01-22
+  sh -s -- -y --default-toolchain nightly-2023-10-01
 
 # Set up the builder-install image with more test helpers for CI.
 FROM rust-sgx-base AS builder-install
@@ -93,7 +93,7 @@ FROM rust-sgx-base AS builder-install
 SHELL ["/bin/bash", "-c"]
 
 # Install go 1.18 release
-RUN GO_PKG=go1.18.5.linux-amd64.tar.gz \
+RUN GO_PKG=go1.22.2.linux-amd64.tar.gz \
   && wget https://golang.org/dl/$GO_PKG -O go.tgz \
   && tar -C /usr/local -xzf go.tgz \
   && rm -rf go.tgz
