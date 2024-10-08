@@ -1,5 +1,8 @@
-# Copyright (c) 2022 MobileCoin Inc.
-FROM ubuntu:focal-20230126 as rust-sgx-base
+# Copyright (c) 2022 to 2024 MobileCoin Inc.
+# build with --build-arg BUILDER_INSTALL_BASE=rust-base to leave out SGX, e.g. for
+#   building clients and libraries on non-intel platforms
+ARG BUILDER_INSTALL_BASE=rust-sgx-base
+FROM ubuntu:focal-20230126 AS rust-base
 
 SHELL ["/bin/bash", "-c"]
 
@@ -51,6 +54,19 @@ RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v25.2/pro
   && cp -r protoc/include/google /usr/include/google \
   && rm -rf protoc
 
+# Github actions overwrites the runtime home directory, so we need to install in a global directory.
+ENV RUSTUP_HOME=/opt/rustup
+ENV CARGO_HOME=/opt/cargo
+RUN  mkdir -p ${RUSTUP_HOME} \
+  && mkdir -p ${CARGO_HOME}/bin
+
+# Install rustup
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
+  sh -s -- -y --default-toolchain nightly-2023-10-01
+
+ENV PATH=/opt/cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+FROM rust-base AS rust-sgx-base
 # Install SGX
 ARG SGX_URL=https://download.01.org/intel-sgx/sgx-linux/2.23/distro/ubuntu20.04-server/sgx_linux_x64_sdk_2.23.100.2.bin
 RUN  curl -o sgx.bin "${SGX_URL}" \
@@ -73,22 +89,12 @@ RUN mkdir -p /etc/apt/keyrings \
   && rm -r /var/lib/apt/lists
 
 ENV SGX_SDK=/opt/intel/sgxsdk
-ENV PATH=/opt/cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/intel/sgxsdk/bin:/opt/intel/sgxsdk/bin/x64
+ENV PATH=${PATH}:/opt/intel/sgxsdk/bin:/opt/intel/sgxsdk/bin/x64
 ENV PKG_CONFIG_PATH=/opt/intel/sgxsdk/pkgconfig
 ENV LD_LIBRARY_PATH=/opt/intel/sgxsdk/sdk_libs
 
-# Github actions overwrites the runtime home directory, so we need to install in a global directory.
-ENV RUSTUP_HOME=/opt/rustup
-ENV CARGO_HOME=/opt/cargo
-RUN  mkdir -p ${RUSTUP_HOME} \
-  && mkdir -p ${CARGO_HOME}/bin
-
-# Install rustup
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
-  sh -s -- -y --default-toolchain nightly-2023-10-01
-
 # Set up the builder-install image with more test helpers for CI.
-FROM rust-sgx-base AS builder-install
+FROM ${BUILDER_INSTALL_BASE} AS builder-install
 
 SHELL ["/bin/bash", "-c"]
 

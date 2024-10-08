@@ -10,13 +10,19 @@ We recommend referencing the image by the hash instead of a tag to verify a cons
 The following command will build and tag `rust-sgx-base:latest`. (But not push it to dockerhub, the tag will be local to your machine.)
 
 ```
-docker build -t mobilecoin/rust-sgx-base .
+docker build -t mobilecoin/rust-sgx-base --target rust-sgx-base .
 ```
 
 This variation will build and tag `builder-install:latest`.
 
 ```
 docker build -t mobilecoin/builder-install .
+```
+
+A third variation is available, `rust-base`, which does not include the SGX SDKs. This facilitates building blockchain clients on non-intel architectures, e.g. linux/arm64.
+
+```
+docker build -t mobilecoin/rust-base --target rust-base .
 ```
 
 To help iterate on a `builder-install` image, you can test it by opening a prompt
