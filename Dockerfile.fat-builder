@@ -1,0 +1,46 @@
+# Copyright (c) 2022 to 2024 MobileCoin Inc.
+# hadolint global ignore=DL3008, DL3015, DL3007
+
+# Fat builder image for building and local testing of MobileCoin services.
+
+# Set BASE_IMAGE the rust-base or rust-sgx image and Name/Tag the image
+# "FROM mobilecoin/rust-base:latest" as mobilecoin/rust-builder:latest
+# "FROM mobilecoin/rust-sgx:latest" as mobilecoin/rust-sgx-builder:latest
+
+ARG BASE_IMAGE=rust-base
+ARG BASE_IMAGE_TAG=latest
+FROM mobilecoin/${BASE_IMAGE}:${BASE_IMAGE_TAG}
+ARG TARGETARCH
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+RUN apt-get update \
+  && apt-get install -y \
+    nginx \
+    postgresql \
+    postgresql-client \
+    python3 \
+    python3-pip \
+    psmisc \
+    sudo \
+  && apt-get clean \
+  && rm -r /var/lib/apt/lists/*
+
+ARG GO_PKG="go1.22.2.linux-${TARGETARCH}.tar.gz"
+
+RUN curl -sSfL -o go.tgz "https://golang.org/dl/${GO_PKG}" \
+  && tar -C /usr/local -xzf go.tgz \
+  && rm -rf go.tgz
+
+ENV GOPATH=/opt/go/
+ENV PATH="/usr/local/go/bin:${GOPATH}/bin:${PATH}"
+RUN mkdir -p "${GOPATH}"
+
+RUN curl -sSLf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash \
+  && cargo binstall cargo-nextest@0.9.82 --no-confirm \
+  && cargo binstall cbindgen@0.24.2 --no-confirm \
+  && cargo binstall sccache@0.3.0 --no-confirm
+
+COPY entrypoint-builder-install.sh /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]

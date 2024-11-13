@@ -5,24 +5,44 @@ For use in downstream builds to provide a consistent and verifiable Rust build e
 
 We recommend referencing the image by the hash instead of a tag to verify a consistent build environment.
 
-# Build
+# Builds
 
-The following command will build and tag `rust-sgx-base:latest`. (But not push it to dockerhub, the tag will be local to your machine.)
+### mobilecoin/rust-base (arm64/amd64)
 
+`rust-base` can be used by CI/CD for building and testing mobilecoin rust projects.
+
+To build locally.
 ```
-docker build -t mobilecoin/rust-sgx-base .
-```
-
-This variation will build and tag `builder-install:latest`.
-
-```
-docker build -t mobilecoin/builder-install .
+docker build -f ./Dockerfile.rust-base -t mobilecoin/rust-base:latest .
 ```
 
-To help iterate on a `builder-install` image, you can test it by opening a prompt
-using the [`mob prompt` tool in `mobilecoin`](https://github.com/mobilecoinfoundation/mobilecoin/blob/master/mob).
-Then you can try to build rust code, or go code, or really whatever your heart desires.
+### mobilecoin/rust-sgx (amd64)
 
-```
-./mob prompt --tag latest --no-pull
-```
+`rust-sgx` can be used by CI/CD for building and testing mobilecoin rust projects that require SGX libraries. This image is only available as a amd64(X64) image.
+
+1. Build `rust-base` image with the `latest` tag.
+2. Build `rust-sgx` image using `rust-base` as the `FROM` image.
+    ```
+    docker build -f ./Dockerfile.rust-sgx -t mobilecoin/rust-sgx:latest .
+    ```
+
+### mobilecoin/fat-builder (arm64/amd64)
+
+`fat-builder` includes some handy tools used for local development. Build this image off the `fat-builder` docker file using `rust-base` as the `FROM` image. This image does not include SGX libraries or tools.
+
+1. Build `rust-base` image with the `latest` tag.
+2. Build `fat-builder` image
+    ```
+    docker build -f ./Dockerfile.fat-builder -t mobilecoin/fat-builder:latest .
+    ```
+
+### mobilecoin/fat-sgx-builder (amd64)
+
+`fat-sgx-builder` includes some handy tools used for local development along with the SGX libraries. This image is only available for amd64(X64). Build this image off the `fat-builder` docker file using `rust-sgx` as the `FROM` image. This image includes SGX libraries or tools.
+
+1. Build `rust-base` image with the `latest` tag.
+2. Build `rust-sgx` image with the `latest` tag.
+2. Build `fat-sgx-builder` image
+    ```
+    docker build --build-arg BASE_IMAGE=rust-sgx -f ./Dockerfile.fat-builder -t mobilecoin/fat-sgx-builder:latest .
+    ```

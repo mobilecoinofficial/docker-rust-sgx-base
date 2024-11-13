@@ -1,0 +1,65 @@
+# Copyright (c) 2022 to 2024 MobileCoin Inc.
+# hadolint global ignore=DL3008, DL3015
+
+FROM ubuntu:focal-20241011
+ARG TARGETARCH
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+# Utilities:
+# build-essential, cmake, curl, git, jq
+#
+# Build Requirements:
+# libclang-dev, libprotobuf-dev, libpq-dev, libssl1.1,
+# libssl-dev, llvm, llvm-dev, pkg-config
+#
+# Needed for GHA cache actions:
+# zstd
+#
+# Needed for building ledger-mob and full service:
+# libdbus-1-dev
+#
+RUN ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime \
+  && apt-get update \
+  && apt-get upgrade -y \
+  && apt-get install -y \
+     build-essential \
+     clang \
+     cmake \
+     curl \
+     git \
+     jq \
+     libclang-dev \
+     libdbus-1-dev \
+     libhidapi-dev \
+     libprotobuf-dev \
+     libpq-dev \
+     libssl1.1 \
+     libssl-dev \
+     libudev-dev \
+     libusb-1.0-0-dev \
+     llvm \
+     llvm-dev \
+     pkg-config \
+     unzip \
+     wget \
+     zstd \
+  && apt-get clean \
+  && rm -r /var/lib/apt/lists/*
+
+# Install a newer version of the protobuf compiler, that's not available in apt
+COPY install_protoc.sh /tmp/install_protoc.sh
+RUN  /tmp/install_protoc.sh \
+  && rm /tmp/install_protoc.sh
+
+# Github actions overwrites the runtime home directory, so we need to install in a global directory.
+ENV RUSTUP_HOME=/opt/rustup
+ENV CARGO_HOME=/opt/cargo
+RUN mkdir -p "${RUSTUP_HOME}" \
+  && mkdir -p "${CARGO_HOME}/bin"
+
+# Install rustup
+RUN curl -sSLf https://sh.rustup.rs | \
+  sh -s -- -y --default-toolchain nightly-2023-10-01
+
+ENV PATH=/opt/cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin

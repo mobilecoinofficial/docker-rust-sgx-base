@@ -8,76 +8,172 @@ on:
     - 'v*.*.*'
 
 env:
-  BASE_DOCKER_REPO: mobilecoin/rust-sgx-base
-  BUILDER_DOCKER_REPO: mobilecoin/builder-install
-  PUSH: ${{ github.event_name == 'pull_request' && 'false' || 'true' }}
+  PUSH_LATEST: ${{ github.event_name == 'pull_request' && 'false' || 'true' }}
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
 
 jobs:
-  docker:
+  lint-actions:
     runs-on: mco-dev-small-x64
     steps:
+    - name: Lint GitHub Actions
+      uses: mobilecoinofficial/gh-actions/lint-actions@v0
+
+  lint-docker:
+    runs-on: mco-dev-small-x64
+    steps:
+    - name: Lint Dockerfiles with Hadolint
+      uses: mobilecoinofficial/gh-actions/lint-docker@v0
+
+  docker-rust-base:
+    needs:
+    - lint-actions
+    - lint-docker
+    strategy:
+      matrix:
+        runner:
+        - mco-dev-small-x64
+        - mco-dev-small-arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: mobilecoinofficial/gh-actions/checkout@v0
 
-    - name: Docker meta for rust-sgx-base
-      id: base_meta
-      uses: docker/metadata-action@v3
+    - name: Docker rust-base
+      id: build
+      uses: mobilecoinofficial/gh-actions/docker@v0
       with:
-        flavor: latest=true
-        images: ${{ env.BASE_DOCKER_REPO }}
+        dockerfile: Dockerfile.rust-base
+        images: mobilecoin/rust-base
+        outputs: type=image,name=mobilecoin/rust-base,push-by-digest=true,name-canonical=true,push=true
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+        save_digest: true
+
+  docker-rust-base-merge:
+    runs-on: mco-dev-small-x64
+    needs:
+    - docker-rust-base
+    steps:
+    - name: Merge and Tag Digests
+      uses: mobilecoinofficial/gh-actions/docker-merge-digests@v0
+      with:
+        images: mobilecoin/rust-base
+        flavor: latest=${{ env.PUSH_LATEST }}
         tags: |
-          type=ref,event=branch
           type=semver,pattern=v{{version}}
-          type=semver,pattern=v{{major}}.{{minor}}
-          type=semver,pattern=v{{major}}
           type=sha
-
-    - name: Docker meta for builder-install
-      id: builder_meta
-      uses: docker/metadata-action@v3
-      with:
-        flavor: latest=true
-        images: ${{ env.BUILDER_DOCKER_REPO }}
-        tags: |
-          type=ref,event=branch
-          type=semver,pattern=v{{version}}
-          type=semver,pattern=v{{major}}.{{minor}}
-          type=semver,pattern=v{{major}}
-          type=sha
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
-
-    - name: Login to DockerHub
-      uses: docker/login-action@v2
-      with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Build and maybe push rust-sgx-base
-      uses: docker/build-push-action@v3
+  docker-rust-sgx:
+    needs:
+    - docker-rust-base-merge
+    runs-on: mco-dev-small-x64
+    steps:
+    - name: Checkout
+      uses: mobilecoinofficial/gh-actions/checkout@v0
+
+    - name: Short Sha
+      id: short_sha
+      uses: mobilecoinofficial/gh-actions/short-sha@v0
+
+    - name: Docker rust-sgx
+      uses: mobilecoinofficial/gh-actions/docker@v0
       with:
-        context: .
-        target: rust-sgx-base
-        cache-from: type=registry,ref=${{ env.BASE_DOCKER_REPO }}:buildcache
-        cache-to: type=registry,ref=${{ env.BASE_DOCKER_REPO }}:buildcache
-        labels: ${{ steps.base_meta.outputs.labels }}
-        tags: ${{ steps.base_meta.outputs.tags }}
-        push: ${{ env.PUSH }}
+        dockerfile: Dockerfile.rust-sgx
+        flavor: latest=${{ env.PUSH_LATEST }}
+        images: mobilecoin/rust-sgx
+        tags: |
+          type=semver,pattern=v{{version}}
+          type=sha
+        build_args: |
+          BASE_IMAGE_TAG=${{ steps.short_sha.outputs.short_sha }}
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Build and maybe push builder-install
-      uses: docker/build-push-action@v3
+  docker-fat-sgx-builder:
+    needs:
+    - docker-rust-sgx
+    runs-on: mco-dev-small-x64
+    steps:
+    - name: Checkout
+      uses: mobilecoinofficial/gh-actions/checkout@v0
+
+    - name: Short Sha
+      id: short_sha
+      uses: mobilecoinofficial/gh-actions/short-sha@v0
+
+    - name: Docker fat-sgx-builder
+      uses: mobilecoinofficial/gh-actions/docker@v0
       with:
-        context: .
-        target: builder-install
-        cache-from: type=registry,ref=${{ env.BUILDER_DOCKER_REPO }}:buildcache
-        cache-to: type=registry,ref=${{ env.BUILDER_DOCKER_REPO }}:buildcache
-        labels: ${{ steps.builder_meta.outputs.labels }}
-        tags: ${{ steps.builder_meta.outputs.tags }}
-        push: ${{ env.PUSH }}
+        dockerfile: Dockerfile.fat-builder
+        flavor: latest=${{ env.PUSH_LATEST }}
+        images: mobilecoin/fat-sgx-builder
+        build_args: |
+          BASE_IMAGE=rust-sgx
+          BASE_IMAGE_TAG=${{ steps.short_sha.outputs.short_sha }}
+        tags: |
+          type=semver,pattern=v{{version}}
+          type=sha
+        push: true
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+  docker-fat-builder:
+    needs:
+    - docker-rust-base-merge
+    strategy:
+      matrix:
+        runner:
+        - mco-dev-small-x64
+        - mco-dev-small-arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+    - name: Checkout
+      uses: mobilecoinofficial/gh-actions/checkout@v0
 
-# via https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-only-cancel-in-progress-jobs-or-runs-for-the-current-workflow
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+    - name: Short Sha
+      id: short_sha
+      uses: mobilecoinofficial/gh-actions/short-sha@v0
+
+    - name: Docker fat-builder
+      id: build
+      uses: mobilecoinofficial/gh-actions/docker@v0
+      with:
+        dockerfile: Dockerfile.fat-builder
+        images: mobilecoin/fat-builder
+        build_args: |
+          BASE_IMAGE=rust-base
+          BASE_IMAGE_TAG=${{ steps.short_sha.outputs.short_sha }}
+        outputs: type=image,name=mobilecoin/fat-builder,push-by-digest=true,name-canonical=true,push=true
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+        save_digest: true
+
+  docker-fat-builder-merge:
+    runs-on: mco-dev-small-x64
+    needs:
+    - docker-fat-builder
+    steps:
+    - name: Merge and Tag Digests
+      uses: mobilecoinofficial/gh-actions/docker-merge-digests@v0
+      with:
+        images: mobilecoin/fat-builder
+        flavor: latest=${{ env.PUSH_LATEST }}
+        tags: |
+          type=semver,pattern=v{{version}}
+          type=sha
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+  success:
+    needs:
+    - docker-fat-builder-merge
+    - docker-fat-sgx-builder
+    runs-on: mco-dev-small-x64
+    steps:
+    - name: Success
+      run: echo "All Builds Success"
