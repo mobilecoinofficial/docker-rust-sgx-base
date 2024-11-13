@@ -18,7 +18,7 @@ docker build -f ./Dockerfile.rust-base -t mobilecoin/rust-base:latest .
 
 ### mobilecoin/rust-sgx (amd64)
 
-`rust-sgx-base` can be used by CI/CD for building and testing mobilecoin rust projects that require SGX libraries. This image is only available as a amd64(X64) image.
+`rust-sgx` can be used by CI/CD for building and testing mobilecoin rust projects that require SGX libraries. This image is only available as a amd64(X64) image.
 
 1. Build `rust-base` image with the `latest` tag.
 2. Build `rust-sgx` image using `rust-base` as the `FROM` image.
