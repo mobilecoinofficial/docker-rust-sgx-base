@@ -4,8 +4,8 @@
 # Fat builder image for building and local testing of MobileCoin services.
 
 # Set BASE_IMAGE the rust-base or rust-sgx image and Name/Tag the image
-# "FROM mobilecoin/rust-base:latest" as mobilecoin/rust-builder:latest
-# "FROM mobilecoin/rust-sgx:latest" as mobilecoin/rust-sgx-builder:latest
+# "FROM mobilecoin/rust-base:latest" as mobilecoin/fat-builder:latest
+# "FROM mobilecoin/rust-sgx:latest" as mobilecoin/fat-sgx-builder:latest
 
 ARG BASE_IMAGE=rust-base
 ARG BASE_IMAGE_TAG=latest
