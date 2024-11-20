@@ -6,20 +6,10 @@
 
 set -e
 
-is_set()
-{
-    var_name="${1}"
-    if [ -z "${!var_name}" ]
-    then
-        echo "${var_name} is not set."
-        exit 1
-    fi
-}
-
 # Echo to stderr - print details when verbose is set.
 echo_err()
 {
-    if [ -n "${ENTRYPOINT_VERBOSE}" ]
+    if [[ -n "${ENTRYPOINT_VERBOSE}" ]]
     then
         printf "%s\n" "$*" >&2
     fi
@@ -32,9 +22,10 @@ if [[ -n "${EXTERNAL_UID}" ]]
 then
     echo_err "-- Found User ID ${EXTERNAL_UID}, setting up and switching to that user."
 
-    is_set EXTERNAL_USER
-    is_set EXTERNAL_GID
-    is_set EXTERNAL_GROUP
+    # Check to make sure variables are set
+    : "${EXTERNAL_USER:?}"
+    : "${EXTERNAL_GID:?}"
+    : "${EXTERNAL_GROUP:?}"
 
     # (mob) uses /tmp/mobilenode to mount the mobilecoin repo. Allow override of repo path.
     REPO_PATH="${REPO_PATH:-/tmp/mobilenode}"

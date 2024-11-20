@@ -1,0 +1,41 @@
+# Copyright (c) 2022 to 2024 MobileCoin Inc.
+# hadolint global ignore=DL3008, DL3015, DL3007
+
+# Update fat-devcontainer for use as a devcontainer
+
+# Set BASE_IMAGE as fat-builder or fat-sgx-builder image and Name/Tag the image
+# "FROM mobilecoin/fat-builder:latest" as mobilecoin/fat-devcontainer:latest
+# "FROM mobilecoin/fat-sgx-build:latest" as mobilecoin/fat-sgx-devcontainer:latest
+
+ARG BASE_IMAGE=fat-builder
+ARG BASE_IMAGE_TAG=latest
+FROM mobilecoin/${BASE_IMAGE}:${BASE_IMAGE_TAG} AS base
+ARG TARGETARCH
+
+ARG USERNAME=sentz
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
+# Create the user
+RUN groupadd --gid "${USER_GID}" "${USERNAME}" \
+    && useradd --uid "${USER_UID}" --gid "${USER_GID}" -m "${USERNAME}" -s /bin/bash \
+    && echo "${USERNAME} ALL=(root) NOPASSWD:ALL" > "/etc/sudoers.d/${USERNAME}" \
+    && chmod 0440 "/etc/sudoers.d/${USERNAME}" \
+    && chown -R sentz:sentz /opt
+
+COPY startup-devcontainer.sh /usr/local/bin/startup-devcontainer.sh
+
+# This squashes the image - why this kludge of a solution docker ???
+# a plain --squash flag wasn't good enough
+FROM scratch AS final
+
+COPY --from=base / /
+
+# If you squash this way we loose all the env vars from the base image
+ENV RUSTUP_HOME=/opt/rustup
+ENV CARGO_HOME=/opt/cargo
+ENV GOPATH=/opt/go/
+ENV PATH="/opt/cargo/bin:/usr/local/go/bin:${GOPATH}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/intel/sgxsdk/bin:/opt/intel/sgxsdk/bin/x64"
+ENV SGX_SDK=/opt/intel/sgxsdk
+ENV PKG_CONFIG_PATH=/opt/intel/sgxsdk/pkgconfig
+ENV LD_LIBRARY_PATH=/opt/intel/sgxsdk/sdk_libs
