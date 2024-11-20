@@ -1,7 +1,7 @@
 # Copyright (c) 2022 to 2024 MobileCoin Inc.
 # hadolint global ignore=DL3008, DL3015, DL3007
 
-# Update fat-builder for use as a devcontainer
+# Update fat-devcontainer for use as a devcontainer
 
 # Set BASE_IMAGE as fat-builder or fat-sgx-builder image and Name/Tag the image
 # "FROM mobilecoin/fat-builder:latest" as mobilecoin/fat-devcontainer:latest

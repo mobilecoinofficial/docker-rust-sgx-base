@@ -42,7 +42,30 @@ docker build -f ./Dockerfile.rust-base -t mobilecoin/rust-base:latest .
 
 1. Build `rust-base` image with the `latest` tag.
 2. Build `rust-sgx` image with the `latest` tag.
-2. Build `fat-sgx-builder` image
+3. Build `fat-sgx-builder` image
     ```
     docker build --build-arg BASE_IMAGE=rust-sgx -f ./Dockerfile.fat-builder -t mobilecoin/fat-sgx-builder:latest .
+    ```
+
+### mobilecoin/fat-devcontainer (amd64/arm64)
+
+`fat-devcontainer` is based off the `fat-builder` image, but includes a non-root user configuration for use as a [devcontainer](https://containers.dev/) with IDEs like VScode. Build this image off the `devcontainer` docker file using `fat-builder` as the `FROM` image.
+
+1. Build `rust-base` image with the `latest` tag.
+2. Build `fat-builder` image with the `latest` tag.
+3. Build `fat-devcontainer` image
+    ```
+    docker build --build-arg BASE_IMAGE=fat-builder -f ./Dockerfile.devcontainer -t mobilecoin/fat-devcontainer:latest .
+    ```
+
+### mobilecoin/fat-sgx-devcontainer (amd64)
+
+`fat-devcontainer` is based off the `fat-sgx-builder` image, but includes a non-root user configuration for use as a [devcontainer](https://containers.dev/) with IDEs like VScode. Build this image off the `devcontainer` docker file using `fat-sgx-builder` as the `FROM` image. This image includes SGX libraries or tools.
+
+1. Build `rust-base` image with the `latest` tag.
+2. Build `rust-sgx` image with the `latest` tag.
+3. Build `fat-sgx-builder` image with the `latest` tag.
+4. Build `fat-sgx-devcontainer` image
+    ```
+    docker build --build-arg BASE_IMAGE=fat-sgx-builder -f ./Dockerfile.devcontainer -t mobilecoin/fat-sgx-devcontainer:latest .
     ```
