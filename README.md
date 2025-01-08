@@ -12,6 +12,7 @@ We recommend referencing the image by the hash instead of a tag to verify a cons
 `rust-base` can be used by CI/CD for building and testing mobilecoin rust projects.
 
 To build locally.
+
 ```
 docker build -f ./Dockerfile.rust-base -t mobilecoin/rust-base:latest .
 ```

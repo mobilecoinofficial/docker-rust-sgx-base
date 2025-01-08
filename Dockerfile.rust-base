@@ -1,7 +1,7 @@
 # Copyright (c) 2022 to 2024 MobileCoin Inc.
 # hadolint global ignore=DL3008, DL3015
 
-FROM ubuntu:focal-20241011
+FROM ubuntu:noble-20241118.1
 ARG TARGETARCH
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -34,7 +34,6 @@ RUN ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime \
      libhidapi-dev \
      libprotobuf-dev \
      libpq-dev \
-     libssl1.1 \
      libssl-dev \
      libudev-dev \
      libusb-1.0-0-dev \

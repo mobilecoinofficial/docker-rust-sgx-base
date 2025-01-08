@@ -21,6 +21,7 @@ RUN apt-get update \
     postgresql-client \
     python3 \
     python3-pip \
+    python3-poetry \
     psmisc \
     sudo \
   && apt-get clean \
