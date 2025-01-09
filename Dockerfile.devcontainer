@@ -17,11 +17,16 @@ ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
 # Create the user
-RUN groupadd --gid "${USER_GID}" "${USERNAME}" \
+RUN userdel -r ubuntu \
+    && groupadd --gid "${USER_GID}" "${USERNAME}" \
     && useradd --uid "${USER_UID}" --gid "${USER_GID}" -m "${USERNAME}" -s /bin/bash \
     && echo "${USERNAME} ALL=(root) NOPASSWD:ALL" > "/etc/sudoers.d/${USERNAME}" \
     && chmod 0440 "/etc/sudoers.d/${USERNAME}" \
-    && chown -R sentz:sentz /opt
+    && chown -R sentz:sentz /opt \
+    && mkdir -p /home/sentz/.config/pip \
+    && echo "[global]" >> /home/sentz/.config/pip/pip.conf \
+    && echo "break-system-packages = true" >> /home/sentz/.config/pip/pip.conf \
+    && chown -R sentz:sentz /home/sentz
 
 COPY startup-devcontainer.sh /usr/local/bin/startup-devcontainer.sh
 
@@ -35,7 +40,7 @@ COPY --from=base / /
 ENV RUSTUP_HOME=/opt/rustup
 ENV CARGO_HOME=/opt/cargo
 ENV GOPATH=/opt/go/
-ENV PATH="/opt/cargo/bin:/usr/local/go/bin:${GOPATH}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/intel/sgxsdk/bin:/opt/intel/sgxsdk/bin/x64"
+ENV PATH="/home/sentz/.local/bin:/opt/cargo/bin:/usr/local/go/bin:${GOPATH}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/intel/sgxsdk/bin:/opt/intel/sgxsdk/bin/x64"
 ENV SGX_SDK=/opt/intel/sgxsdk
 ENV PKG_CONFIG_PATH=/opt/intel/sgxsdk/pkgconfig
 ENV LD_LIBRARY_PATH=/opt/intel/sgxsdk/sdk_libs

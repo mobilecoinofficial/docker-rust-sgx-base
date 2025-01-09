@@ -9,17 +9,17 @@ FROM mobilecoin/rust-base:${BASE_IMAGE_TAG}
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Install SGX SDK
-ARG SGX_URL=https://download.01.org/intel-sgx/sgx-linux/2.23/distro/ubuntu20.04-server/sgx_linux_x64_sdk_2.23.100.2.bin
+ARG SGX_URL=https://download.01.org/intel-sgx/sgx-linux/2.23/distro/ubuntu22.04-server/sgx_linux_x64_sdk_2.23.100.2.bin
 RUN curl -sSfL -o sgx.bin "${SGX_URL}" \
   && chmod +x ./sgx.bin \
   && ./sgx.bin --prefix=/opt/intel \
   && rm ./sgx.bin
 
 # Install DCAP libraries
-ARG DCAP_VERSION=1.20.100.2-focal1
+ARG DCAP_VERSION=1.22.100.3-noble1
 RUN mkdir -p /etc/apt/keyrings \
   && curl -sSfL https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | gpg --dearmor -o /etc/apt/keyrings/intel-sgx.gpg \
-  && echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/intel-sgx.gpg] https://download.01.org/intel-sgx/sgx_repo/ubuntu focal main" | tee /etc/apt/sources.list.d/intel-sgx.list \
+  && echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/intel-sgx.gpg] https://download.01.org/intel-sgx/sgx_repo/ubuntu noble main" | tee /etc/apt/sources.list.d/intel-sgx.list \
   && apt-get update \
   && apt-get install -y \
      libsgx-dcap-ql=${DCAP_VERSION} \
