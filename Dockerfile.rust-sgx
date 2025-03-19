@@ -9,7 +9,7 @@ FROM mobilecoin/rust-base:${BASE_IMAGE_TAG}
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Install SGX SDK
-ARG SGX_URL=https://download.01.org/intel-sgx/sgx-linux/2.23/distro/ubuntu22.04-server/sgx_linux_x64_sdk_2.23.100.2.bin
+ARG SGX_URL=https://download.01.org/intel-sgx/sgx-linux/2.25/distro/ubuntu24.04-server/sgx_linux_x64_sdk_2.25.100.3.bin
 RUN curl -sSfL -o sgx.bin "${SGX_URL}" \
   && chmod +x ./sgx.bin \
   && ./sgx.bin --prefix=/opt/intel \
