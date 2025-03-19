@@ -11,7 +11,7 @@ env:
   PUSH_LATEST: ${{ github.event_name == 'pull_request' && 'false' || 'true' }}
 
 concurrency:
-  group: ${{ github.workflow }}
+  group: ${{ github.workflow }}-${{ github.event_name }}
   cancel-in-progress: true
 
 jobs:

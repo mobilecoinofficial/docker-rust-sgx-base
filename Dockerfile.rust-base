@@ -59,6 +59,6 @@ RUN mkdir -p "${RUSTUP_HOME}" \
 
 # Install rustup
 RUN curl -sSLf https://sh.rustup.rs | \
-  sh -s -- -y --default-toolchain nightly-2023-10-01
+  sh -s -- -y --default-toolchain nightly-2024-10-11
 
 ENV PATH=/opt/cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
